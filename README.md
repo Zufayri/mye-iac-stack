@@ -1,1 +1,1 @@
-IaC for AWS provisioning consisting Terraform and Ansible scripts
+AWS Iac with Terraform and Ansible
