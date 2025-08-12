@@ -1,3 +1,4 @@
+# Network Module
 variable "aws_region" {
   type = string
   description = "Region of the AWS"
@@ -26,4 +27,10 @@ variable "cidr_private_subnet" {
 variable "aws_availability_zone" {
   type        = list(string)
   description = "Availability Zones"
+}
+
+# Security Group Module
+variable "allowed_ssh_cidr" {
+  type = string
+  description = "Admin IP"  
 }

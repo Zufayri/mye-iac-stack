@@ -7,3 +7,9 @@ module "networking" {
     cidr_private_subnet = var.cidr_private_subnet 
 }
 
+module "sg" {
+    source = "./modules/security_group"
+    vpc_id = module.network.vpc_id
+    allowed_ssh = var.allowed_ssh_cidr
+}
+
