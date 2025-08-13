@@ -13,3 +13,9 @@ module "sg" {
     allowed_ssh = var.allowed_ssh_cidr
 }
 
+module "alb" {
+    source = "./modules/alb"
+    vpc_id = module.network.vpc_id
+    public_subnet_id = module.network.public_subnet_id
+    alb_sg_id = module.sg.alb_sg_id
+}
