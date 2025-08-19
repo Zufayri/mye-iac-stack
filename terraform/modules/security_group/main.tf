@@ -53,10 +53,6 @@ resource "aws_security_group" "nginx_sg" {
         security_groups = [aws_security_group.alb_sg.id] #call from terraform resource named alb_sg
         }
 
-    # SECURITY NOTE: SSH is currently open to the internet (0.0.0.0/0) for convenience. 
-    # For production, it is strongly recommended to use a bastion host:
-    # - Update `allowed_ssh_cidr` in root variables to the bastion host's SG or IP.
-    # - Place this server in a private subnet.
     ingress {
         description = "Allow SSH from allowed_ssh IP"
         from_port = 22
@@ -70,7 +66,7 @@ resource "aws_security_group" "nginx_sg" {
         to_port = 0
         protocol = "-1"
         cidr_blocks = ["0.0.0.0/0"]
-    } 
+    }
 
     tags = {Name = "nginx-sg"}
 
