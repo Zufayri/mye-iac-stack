@@ -15,6 +15,7 @@ module "sg" {
   allowed_ssh = var.allowed_ssh_cidr
 }
 
+
 # AMI
 data "aws_ami" "ubuntu_latest" {
   most_recent = true
@@ -31,15 +32,23 @@ data "aws_ami" "ubuntu_latest" {
   }
 }
 
+# Key
+module "bastion_key" {
+  source = "./modules/keypair"
+  key_name = "mye-bastion-key"
+  public_key_path = "~/.ssh/mye-bastion-key.pub"
+}
+
 # Instances
 module "nginx" {
   source = "./modules/ec2"
   name = "nginx"
-  subnet_id = module.network.private_subnet_ids[0]
+  subnet_id = module.network.public_subnet_ids[0]
   instance_type = "t3.micro"
-  key_name = "my-key"  # This is existing manually created key. Change its name if required.
+  key_name = ""
+  #key_name = module.bastion_key.key_name
   security_group_ids = [module.sg.nginx_sg_id] #[module.sg.nginx_sg_id]
-  associate_public_ip = true # Change to false if utilizing private subnet 
+  associate_public_ip = false # Change to false if utilizing private subnet 
   ami_id = data.aws_ami.ubuntu_latest.id  #Insert AMI ID
 }
 
@@ -48,10 +57,8 @@ module "webapp" {
   name = "webapp"
   subnet_id = module.network.private_subnet_ids[0]
   instance_type = "t3.micro"
-  key_name = "my-key"
+  key_name = ""
   security_group_ids = [module.sg.webapp_sg_id]
   associate_public_ip = false
   ami_id = data.aws_ami.ubuntu_latest.id
 }
-
-
