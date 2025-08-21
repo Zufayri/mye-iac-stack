@@ -44,13 +44,14 @@ module "bastion_key" {
 # Instances
 module "bastion" {
   source = "./modules/ec2"
+  //count  = length(module.network.public_subnet_ids)
   name = "bastion"
-  subnet_id = module.network.public_subnet_ids[0]
+  subnet_id = module.network.public_subnet_ids[0] //module.network.public_subnet_ids[count.index]
   instance_type = "t3.micro"
   key_name = module.bastion_key.key_name
   security_group_ids = [module.sg.bastion_sg_id]
   associate_public_ip = true
-  ami_id = data.aws_ami.ubuntu_latest
+  ami_id = data.aws_ami.ubuntu_latest.id
   allocate_eip = true #Allocate elastic IP
 }
 
@@ -85,5 +86,5 @@ module "db" {
   key_name = ""
   security_group_ids = [module.sg.db_sg_id]
   associate_public_ip = false
-  ami_id = data.aws_ami.ubuntu_latest
+  ami_id = data.aws_ami.ubuntu_latest.id
 }

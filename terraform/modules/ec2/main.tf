@@ -25,3 +25,11 @@ resource "aws_instance" "main" {
     tags = {Name = var.name}
 }
 
+# Associate Elastic IP if allocate_eip = true
+resource "aws_eip" "main" {
+    count = var.allocate_eip ? 1 : 0
+    domain = "vpc"
+    instance = aws_instance.main.id
+    tags = {Name="${var.name}-eip"}
+}
+

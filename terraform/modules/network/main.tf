@@ -45,10 +45,18 @@ resource "aws_internet_gateway" "igw" {
 }
 
 # NAT Gateway (for private egress)
+# Elastic IP Allocation
+resource "aws_eip" "nat" {
+  count = length(aws_subnet.public)  #remove if making one or place to one specific subnet only
+  domain = "vpc"
+  tags = {Name="nat-eip-${count.index}"}
+}
+
 resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id = aws_subnet.public.id
-  tags = {Name = "nat-gw"}
+  count          = length(aws_subnet.private) #remove if making one or place to one specific subnet only
+  subnet_id      = aws_subnet.private[count.index].id
+  allocation_id = aws_eip.nat[count.index].id  #Link elastic IP to NAT
+  tags = {Name = "${var.vpc_name}-nat-gw-${count.index+1}"}
   depends_on = [ aws_internet_gateway.igw ]
 }
 
@@ -63,7 +71,7 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.igw.id
   }
 
-  tags = {Name = "${var.vpc_name}-public-rt"}
+  tags = {Name = "${var.vpc_name}-public-rt-${count.index + 1}"}
 }
 
 resource "aws_route_table_association" "public" {
@@ -76,17 +84,19 @@ resource "aws_route_table_association" "public" {
 # Private Route Table and Subnet Association
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
+  # 1 NAT per private subnet
+  count = length(aws_nat_gateway.nat) #remove if making one or place to one specific subnet only
 
   route {
     cidr_block = "0.0.0.0/0" 
-    gateway_id = aws_nat_gateway.nat.id
+    gateway_id = aws_nat_gateway.nat[count.index].id  #aws_nat_gateway.nat[0].id
   }
 
-  tags = {Name = "${var.vpc_name}-private-rt"}
+  tags = {Name = "${var.vpc_name}-private-rt-${count.index + 1}"}
 }
 
 resource "aws_route_table_association" "private" {
   count          = length(aws_subnet.private)
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[count.index].id
 }
