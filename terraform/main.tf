@@ -6,6 +6,8 @@ module "network" {
   cidr_public_subnet = var.cidr_public_subnet
   aws_availability_zone = var.aws_availability_zone
   cidr_private_subnet = var.cidr_private_subnet 
+  enable_dns_support = true
+  enable_dns_hostnames = false
 }
 
 # Security Group
@@ -40,13 +42,24 @@ module "bastion_key" {
 }
 
 # Instances
+module "bastion" {
+  source = "./modules/ec2"
+  name = "bastion"
+  subnet_id = module.network.public_subnet_ids[0]
+  instance_type = "t3.micro"
+  key_name = module.bastion_key.key_name
+  security_group_ids = [module.sg.bastion_sg_id]
+  associate_public_ip = true
+  ami_id = data.aws_ami.ubuntu_latest
+  allocate_eip = true #Allocate elastic IP
+}
+
 module "nginx" {
   source = "./modules/ec2"
   name = "nginx"
-  subnet_id = module.network.public_subnet_ids[0]
+  subnet_id = module.network.private_subnet_ids[0]
   instance_type = "t3.micro"
   key_name = ""
-  #key_name = module.bastion_key.key_name
   security_group_ids = [module.sg.nginx_sg_id] #[module.sg.nginx_sg_id]
   associate_public_ip = false # Change to false if utilizing private subnet 
   ami_id = data.aws_ami.ubuntu_latest.id  #Insert AMI ID
@@ -61,4 +74,16 @@ module "webapp" {
   security_group_ids = [module.sg.webapp_sg_id]
   associate_public_ip = false
   ami_id = data.aws_ami.ubuntu_latest.id
+}
+
+module "db" {
+  #Postgres via Docker
+  source = "./modules/ec2"
+  name = "db"
+  subnet_id = module.network.private_subnet_ids[0]
+  instance_type = "t3.micro"
+  key_name = ""
+  security_group_ids = [module.sg.db_sg_id]
+  associate_public_ip = false
+  ami_id = data.aws_ami.ubuntu_latest
 }
