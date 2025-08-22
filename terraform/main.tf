@@ -17,6 +17,14 @@ module "sg" {
   allowed_ssh = var.allowed_ssh_cidr
 }
 
+# Public ALB (internet-facing)
+module "alb" {
+  source           = "./modules/alb"
+  vpc_id           = module.network.vpc_id
+  public_subnet_ids = module.network.public_subnet_ids
+  alb_sg_id        = module.sg.alb_sg_id
+}
+
 
 # AMI
 data "aws_ami" "ubuntu_latest" {
@@ -44,7 +52,6 @@ module "bastion_key" {
 # Instances
 module "bastion" {
   source = "./modules/ec2"
-  //count  = length(module.network.public_subnet_ids)
   name = "bastion"
   subnet_id = module.network.public_subnet_ids[0] //module.network.public_subnet_ids[count.index]
   instance_type = "t3.micro"
@@ -57,34 +64,40 @@ module "bastion" {
 
 module "nginx" {
   source = "./modules/ec2"
-  name = "nginx"
-  subnet_id = module.network.private_subnet_ids[0]
+  count = length(module.network.private_subnet_ids)
+  subnet_id = module.network.private_subnet_ids[count.index]
   instance_type = "t3.micro"
-  key_name = ""
+  key_name = module.bastion_key.key_name
   security_group_ids = [module.sg.nginx_sg_id] #[module.sg.nginx_sg_id]
   associate_public_ip = false # Change to false if utilizing private subnet 
   ami_id = data.aws_ami.ubuntu_latest.id  #Insert AMI ID
+  
+  name = "${var.vpc_name}-nginx-${count.index + 1}"
 }
 
 module "webapp" {
   source = "./modules/ec2"
-  name = "webapp"
-  subnet_id = module.network.private_subnet_ids[0]
+  count = length(module.network.private_subnet_ids)
+  subnet_id = module.network.private_subnet_ids[count.index]
   instance_type = "t3.micro"
-  key_name = ""
+  key_name = module.bastion_key.key_name
   security_group_ids = [module.sg.webapp_sg_id]
   associate_public_ip = false
   ami_id = data.aws_ami.ubuntu_latest.id
+
+  name = "${var.vpc_name}-webapp-${count.index + 1}"
 }
 
 module "db" {
   #Postgres via Docker
   source = "./modules/ec2"
-  name = "db"
-  subnet_id = module.network.private_subnet_ids[0]
+  count = length(module.network.private_subnet_ids)
+  subnet_id = module.network.private_subnet_ids[count.index]
   instance_type = "t3.micro"
-  key_name = ""
+  key_name = module.bastion_key.key_name
   security_group_ids = [module.sg.db_sg_id]
   associate_public_ip = false
   ami_id = data.aws_ami.ubuntu_latest.id
+
+  name = "${var.vpc_name}-db-${count.index + 1}"
 }
