@@ -1,0 +1,6 @@
+---
+- name: Baseline and platform hardening
+  hosts: all
+  become: true
+  roles:
+    - system_hardening
