@@ -1,0 +1,29 @@
+---
+- name: Harden sshd config - disallow root, disable password authentication
+  lineinfile: # ensure specific line exist
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}" # find using regrex expression
+    line: "{{ item.line }}"
+    create: yes
+  loop:
+    - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
+    - { regexp: "^#?PasswordAuthentication", line: "PasswordAuthentication no" }
+    - {
+        regexp: "^#?ChallengeResponseAuthentication",
+        line: "ChallengeResponseAuthentication no",
+      }
+    - { regexp: "^#?UsePAM", line: "UsePAM yes" }
+  notify: Restart ssh
+
+  # Limit number of SSH login per session
+- name: Reduce MaxAuthTries
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?MaxAuthTries"
+    line: "MaxAuthTries 3" # maximum number of login attempts
+  notify: Restart ssh
+
+- name: Ensure ssh service restarted
+  service:
+    name: ssh
+    state: restarted

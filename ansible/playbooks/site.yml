@@ -4,3 +4,4 @@
   become: true
   roles:
     - system_hardening
+    - ssh_hardening
