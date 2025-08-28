@@ -1,7 +1,0 @@
----
-- name: Test SSH to all hosts
-  hosts: all
-  gather_facts: false
-  become: false
-  roles:
-    - ssh_test
