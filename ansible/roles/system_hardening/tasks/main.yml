@@ -1,0 +1,86 @@
+---
+- name: Ensure apt cache is updated
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600 #refresh every xxxx seconds
+
+- name: Upgrade installed packages
+  apt:
+    upgrade: dist
+    autoremove: yes
+    autoclean: yes
+
+- name: Install base packages
+  apt:
+    name:
+      - unattended-upgrades # automatically install security updates
+      - fail2ban # monitor logs, bans IPs with many failed attempts
+      - htop
+      - apt-transport-https # ensure secure package downloads
+      - ca-certificates # ensure secure package downloads
+    state: present
+
+- name: Configure unattended-upgrades
+  copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+- name: Add sysctl hardening settings
+  copy:
+    dest: /etc/sysctl.d/99-hardening.conf
+    content: |
+      net.ipv4.ip_forward = 0
+      net.ipv4.conf.all.accept_source_route = 0
+      net.ipv4.conf.default.accept_source_route = 0
+      net.ipv4.conf.all.accept_redirects = 0
+      net.ipv4.conf.default.accept_redirects = 0
+      net.ipv4.conf.all.rp_filter = 1
+      net.ipv4.tcp_syncookies = 1
+  notify: Apply sysctl
+
+- name: UFW & fail2ban hardening safely
+  block:
+    # UFW (host firewall; complements cloud provider security groups for defense-in-depth)
+    - name: Ensure ufw installed
+      apt:
+        name: ufw
+        state: present
+
+    - name: Allow outgoing by default
+      ufw:
+        rule: allow
+        direction: out
+
+    # SSH allowed only via Cloud Provider Security Group; UFW is permissive to avoid blocking
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        port: 22
+        proto: tcp
+
+    - name: Set UFW default deny incoming
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Configure fail2ban SSH jail (basic)
+      copy:
+        dest: /etc/fail2ban/jail.d/ssh.local
+        content: |
+          [sshd]
+          enabled = true
+          maxretry = 5
+          bantime = 1h
+      notify: Restart fail2ban
+
+  rescue:
+    - name: Rollback firewall to avoid lockout
+      ufw:
+        state: disabled
+
+    - name: Stop fail2ban if something went wrong
+      service:
+        name: fail2ban
+        state: stopped

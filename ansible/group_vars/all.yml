@@ -1,20 +1,5 @@
 ---
-# Bastion host to remote servers
-# Default SSH user Ansible will use to connect to hosts
-#ansible_user: ubuntu
-
-# Paths to key
-#ssh_key_paths:
-#  bastion: ~/.ssh/mye-bastion-key
-#  nginx: ~/.ssh/mye-bastion-key
-#  webapp: ~/.ssh/mye-bastion-key
-#  db: ~/.ssh/mye-bastion-key
-
-# Default Bastion
-#bastion_host: bastion
-
-#ansible_ssh_common_args: >-
-#  -o ProxyCommand="ssh -i {{ bastion_key_path }} -W %h:%p {{ ansible_user }}@{{ hostvars['bastion'].ansible_host }}"
+ansible_user: ubuntu
 
 #---------------------------------------------------
 
@@ -32,5 +17,3 @@ db_host_port: 5432
 
 # Firewall (UFW) rules
 ufw_allow_ssh_from: "10.0.0.0/8"
-#ufw_allow_ssh_from: "{{ hostvars['bastion']['ansible_host'] }}"
-

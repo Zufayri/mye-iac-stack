@@ -1,0 +1,8 @@
+---
+- name: Baseline and platform hardening
+  hosts: all
+  become: true
+  roles:
+    - system_hardening
+    - ssh_hardening
+    - container_platform
