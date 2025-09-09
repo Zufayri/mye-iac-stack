@@ -1,0 +1,75 @@
+---
+- name: Ensure Docker is installed
+  ansible.builtin.package:
+    name: docker
+    state: present
+
+- name: Ensure Docker service is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Create directory for Dockerfile
+  ansible.builtin.file:
+    path: "/home/ubuntu/mye-webapp-dockerfile"
+    state: directory
+    mode: "0755"
+    owner: ubuntu
+    group: ubuntu
+
+- name: Create directory for Flask webapp files
+  ansible.builtin.file:
+    path: "/home/ubuntu/mye-webapp"
+    state: directory
+    mode: "0755"
+    owner: ubuntu
+    group: ubuntu
+
+- name: Copy Dockerfile to remote host
+  ansible.builtin.copy:
+    src: "{{ webapp_path }}/Dockerfile"
+    dest: "/home/ubuntu/mye-webapp-dockerfile/Dockerfile"
+    mode: "0755"
+    owner: ubuntu
+    group: ubuntu
+
+- name: Copy requirements.txt to remote host
+  ansible.builtin.copy:
+    src: "{{ webapp_path }}/requirements.txt"
+    dest: "/home/ubuntu/mye-webapp-dockerfile/requirements.txt"
+    mode: "0644"
+    owner: ubuntu
+    group: ubuntu
+
+- name: Copy app.py to remote host
+  ansible.builtin.copy:
+    src: "{{ webapp_path }}/app.py"
+    dest: "/home/ubuntu/mye-webapp-dockerfile/app.py"
+    mode: "0644"
+    owner: ubuntu
+    group: ubuntu
+
+- name: Build app image
+  community.docker.docker_image:
+    name: "{{ webapp_image }}"
+    source: build
+    build:
+      path: "/home/ubuntu/mye-webapp-dockerfile"
+      network: host
+
+- name: Run Flask container behind LB
+  community.docker.docker_container:
+    name: mye-flask-app
+    image: "{{ webapp_image }}"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ app_host_port }}" # Expose container’s port 5000 as port 80 on the host
+    env:
+      FLASK_ENV: production
+      DB_HOST: "{{ hostvars[groups['db'][0]].ansible_host | default(hostvars[groups['db'][0]].inventory_hostname) }}"
+      DB_PORT: "{{ db_port | string }}"
+      DB_USER: "{{ db_user }}"
+      DB_PASSWORD: "{{ db_password }}"
+      DB_NAME: "{{ db_name }}"

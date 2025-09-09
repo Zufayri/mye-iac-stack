@@ -6,3 +6,15 @@
     - system_hardening
     - ssh_hardening
     - container_platform
+
+- name: Deploy application containers (webapp group)
+  hosts: webapp
+  become: true
+  roles:
+    - app_service
+
+- name: Deploy database container (db group)
+  hosts: db
+  become: true
+  roles:
+    - postgres_service

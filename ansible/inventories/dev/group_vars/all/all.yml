@@ -1,0 +1,22 @@
+---
+ansible_user: ubuntu
+
+vpc_cidr: "11.0.0.0/16" # Replace with your VPC CIDR
+
+allowed_ssh: "0.0.0.0/0" # Replace with only allowed ip address
+
+# Path to the webapp source (relative to playbook_dir or absolute)
+webapp_path: "{{ playbook_dir }}/../../webapp"
+
+#---------------------------------------------------
+# Internal Ports (inside containers/instance)
+webapp_port: 5000
+db_port: 5432
+
+# Container Images
+webapp_image: "mye-flask-image"
+postgres_image: "postgres:15"
+
+# Host to container port mappings
+app_host_port: 80:5000
+db_host_port: 5432:5432

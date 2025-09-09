@@ -1,0 +1,25 @@
+---
+- name: Ensure Docker is installed
+  ansible.builtin.package:
+    name: docker
+    state: present
+
+- name: Ensure Docker service is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure postgres container running
+  docker_container:
+    name: "mye-postgres-db"
+    image: "{{ postgres_image }}"
+    state: started
+    restart_policy: always
+    env:
+      POSTGRES_USER: "{{ db_user }}"
+      POSTGRES_PASSWORD: "{{ db_password }}"
+      POSTGRES_DB: "{{ db_name }}"
+    published_ports: "{{ db_host_port }}"
+    volumes:
+      - /var/lib/postgres-data:/var/lib/postgresql/data # HOST_MACHINE_PATH : CONTAINER_PATH
