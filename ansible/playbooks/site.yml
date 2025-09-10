@@ -18,3 +18,9 @@
   become: true
   roles:
     - postgres_service
+
+- name: Configure Nginx
+  hosts: nginx
+  become: true
+  roles:
+    - nginx

@@ -10,7 +10,7 @@ webapp_path: "{{ playbook_dir }}/../../webapp"
 
 #---------------------------------------------------
 # Internal Ports (inside containers/instance)
-webapp_port: 5000
+webapp_port: 80
 db_port: 5432
 
 # Container Images
