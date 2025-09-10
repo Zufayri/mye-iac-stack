@@ -40,6 +40,7 @@
       net.ipv4.tcp_syncookies = 1
   notify: Apply sysctl
 
+# ---------------------------------UFW---------------------------------------
 - name: UFW & fail2ban hardening safely
   block:
     # UFW (host firewall; complements cloud provider security groups for defense-in-depth)
@@ -59,6 +60,12 @@
         rule: allow
         port: 22
         proto: tcp
+
+    # All Traffic allowed within the VPC
+    - name: Allow all traffic from VPC
+      ufw:
+        rule: allow
+        from: "{{ vpc_cidr }}" # Replace with your VPC CIDR
 
     - name: Set UFW default deny incoming
       ufw:

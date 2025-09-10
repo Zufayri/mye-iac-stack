@@ -1,0 +1,4 @@
+# Sample values (do not use in production!)
+db_user: sample_user
+db_password: sample_password
+db_name: sample_db

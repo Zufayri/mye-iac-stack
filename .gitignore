@@ -4,5 +4,5 @@ terraform.tfstate.backup
 .terraform.lock.hcl
 crash.log
 tfoutput.json
-ansible/group_vars/vault.yml
-ansible/inventories/*
+ansible/inventories/dev/group_vars/all/vault.yml
+ansible/inventories/dev/hosts.ini
