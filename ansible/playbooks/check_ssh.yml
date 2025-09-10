@@ -1,0 +1,5 @@
+---
+- name: Verify SSH connectivity to all servers
+  hosts: all
+  roles:
+    - ssh_check
